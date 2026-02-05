@@ -4,4 +4,15 @@
 
 # Cache
 
-A clean, lightweight caching app template for iOS.
+A lightweight, professional clipboard caching app template for macOS.
+
+## Features
+- Menubar-first UI
+- Fast, local-only storage
+- Simple hotkey workflow
+
+## Quick Start
+Open `Cache.xcodeproj` in Xcode and run the `Cache` scheme.
+
+## License
+MIT

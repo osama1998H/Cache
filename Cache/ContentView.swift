@@ -110,6 +110,9 @@ struct ContentView: View {
                         appState.pasteItem(item)
                     }
                 }
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
+                .listRowBackground(Color.clear)
             }
         }
     }

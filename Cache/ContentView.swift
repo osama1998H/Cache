@@ -129,6 +129,10 @@ struct ContentView: View {
                     }
                 }
             }
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2) {
+                appState.pasteItem(item)
+            }
 
             Spacer(minLength: 8)
 
@@ -149,9 +153,6 @@ struct ContentView: View {
             Button("Copy") {
                 appState.copyItem(item)
             }
-        }
-        .onTapGesture(count: 2) {
-            appState.pasteItem(item)
         }
     }
 

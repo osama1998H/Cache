@@ -8,8 +8,12 @@ struct ContentView: View {
     @FocusState private var searchFocused: Bool
     @State private var showInvalidHotkeyAlert = false
 
+    private var filteredSections: (pinned: [ClipboardItem], recent: [ClipboardItem]) {
+        appState.store.filteredSections(query: appState.searchQuery)
+    }
+
     private var filteredItems: [ClipboardItem] {
-        appState.store.filteredItems(query: appState.searchQuery)
+        filteredSections.pinned + filteredSections.recent
     }
 
     var body: some View {
@@ -41,7 +45,7 @@ struct ContentView: View {
                 selection = filteredItems.first?.id
             }
         }
-.onChange(of: appState.searchQuery) { _ in
+        .onChange(of: appState.searchQuery) { _ in
             if let selection, !filteredItems.contains(where: { $0.id == selection }) {
                 self.selection = filteredItems.first?.id
             }
@@ -85,35 +89,69 @@ struct ContentView: View {
                     Spacer()
                 }
             } else {
-                List(filteredItems, selection: $selection) { item in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(item.text)
-                            .lineLimit(2)
-                            .truncationMode(.tail)
-                        HStack(spacing: 8) {
-                            Text(item.timestamp, style: .time)
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            if let appName = item.sourceAppName {
-                                Text(appName)
-                                    .font(.caption2)
-                                    .foregroundColor(.secondary)
+                List(selection: $selection) {
+                    if !filteredSections.pinned.isEmpty {
+                        Section("Pinned") {
+                            ForEach(filteredSections.pinned) { item in
+                                itemRow(item)
                             }
                         }
                     }
-                    .contextMenu {
-                        Button("Copy") {
-                            appState.copyItem(item)
+                    if !filteredSections.recent.isEmpty {
+                        Section("Recent") {
+                            ForEach(filteredSections.recent) { item in
+                                itemRow(item)
+                            }
                         }
-                    }
-                    .onTapGesture(count: 2) {
-                        appState.pasteItem(item)
                     }
                 }
                 .scrollContentBackground(.hidden)
                 .background(Color.clear)
                 .listRowBackground(Color.clear)
             }
+        }
+    }
+
+    private func itemRow(_ item: ClipboardItem) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.text)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
+                HStack(spacing: 8) {
+                    Text(item.timestamp, style: .time)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    if let appName = item.sourceAppName {
+                        Text(appName)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            Button {
+                appState.togglePin(item)
+            } label: {
+                Image(systemName: item.isPinned ? "pin.fill" : "pin")
+                    .foregroundColor(item.isPinned ? .orange : .secondary)
+            }
+            .buttonStyle(.plain)
+            .help(item.isPinned ? "Unpin" : "Pin")
+        }
+        .contentShape(Rectangle())
+        .contextMenu {
+            Button(item.isPinned ? "Unpin" : "Pin") {
+                appState.togglePin(item)
+            }
+            Button("Copy") {
+                appState.copyItem(item)
+            }
+        }
+        .onTapGesture(count: 2) {
+            appState.pasteItem(item)
         }
     }
 
@@ -142,7 +180,7 @@ struct ContentView: View {
             .buttonStyle(.bordered)
 
             Spacer()
-            Text("\(filteredItems.count)/20")
+            Text("\(appState.store.recentCount)/\(appState.store.maxRecentItems) recent • \(appState.store.pinnedCount) pinned")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

@@ -61,6 +61,10 @@ final class AppState: ObservableObject {
         pasteService.copyToPasteboard(item.text)
     }
 
+    func togglePin(_ item: ClipboardItem) {
+        store.togglePinned(itemID: item.id)
+    }
+
     func pasteItem(_ item: ClipboardItem) {
         pasteService.copyToPasteboard(item.text)
 
